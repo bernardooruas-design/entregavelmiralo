@@ -13,7 +13,6 @@ interface Props {
 
 const STORY_DURATION = 5000;
 
-const API_BASE = 'http://localhost:3001';
 function postUrl(seed: string) {
   return `https://picsum.photos/seed/${seed}-story/600/900`;
 }

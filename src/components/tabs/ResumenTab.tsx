@@ -52,7 +52,7 @@ export default function ResumenTab() {
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          {PACKAGES.map((pkg, i) => (
+          {PACKAGES.map((pkg) => (
             <div
               key={pkg.label}
               className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer ${

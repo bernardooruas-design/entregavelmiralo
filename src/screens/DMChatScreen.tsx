@@ -122,13 +122,14 @@ const MALE_USERS = [
   { name: 'pablo.m',       avatarN: 52, online: false },
   { name: 'sergio_rv',     avatarN: 61, online: false },
 ];
-const MALE_PRIVATE_USERS = [
+// Private user name arrays kept for future use
+const _MALE_PRIVATE_USERS = [
   { name: 'Fer*****', avatarN: 12, online: true },
   { name: 'die*****', avatarN: 26, online: true },
   { name: 'car*****', avatarN: 33, online: false },
   { name: 'pab*****', avatarN: 52, online: false },
   { name: 'ser*****', avatarN: 61, online: false },
-];
+]; void _MALE_PRIVATE_USERS;
 
 const FEMALE_USERS = [
   { name: 'laura.garcia_', avatarN: 5,  online: true },
@@ -137,13 +138,13 @@ const FEMALE_USERS = [
   { name: 'daniela_c',     avatarN: 20, online: false },
   { name: 'carmen.lp',     avatarN: 44, online: false },
 ];
-const FEMALE_PRIVATE_USERS = [
+const _FEMALE_PRIVATE_USERS = [
   { name: 'lau*****', avatarN: 5,  online: true },
   { name: 'isa*****', avatarN: 9,  online: true },
   { name: 'mar*****', avatarN: 16, online: false },
   { name: 'dan*****', avatarN: 20, online: false },
   { name: 'car*****', avatarN: 44, online: false },
-];
+]; void _FEMALE_PRIVATE_USERS;
 
 function avatarUrl(n: number) {
   return `https://i.pravatar.cc/150?img=${n}`;

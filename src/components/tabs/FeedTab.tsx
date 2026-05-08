@@ -299,7 +299,7 @@ export default function FeedTab() {
   );
 }
 
-function PostCard({ def, avatarSrc, username, commentUsernames, isPrivate }: {
+function PostCard({ def, avatarSrc, username, commentUsernames }: {
   def: PostDef;
   avatarSrc: string;
   username: string;
