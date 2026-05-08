@@ -1,17 +1,18 @@
+import { API_BASE as API } from '../../config';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/appStore';
 import { useMemo } from 'react';
 import type { TargetGender } from '../../store/appStore';
 
 const DM_LIMIT = 2;
-const API_BASE = 'http://localhost:3001';
+
 
 function avatarUrl(n: number) {
   return `https://i.pravatar.cc/150?img=${n}`;
 }
 function proxyUrl(url: string | null): string | null {
   if (!url) return null;
-  return `${API_BASE}/api/proxy-image?url=${encodeURIComponent(url)}`;
+  return `${API}/api/proxy-image?url=${encodeURIComponent(url)}`;
 }
 
 const AVATAR_NS = [4, 18, 27, 38, 11, 6, 31, 45];

@@ -1,3 +1,4 @@
+import { API_BASE as API } from '../../config';
 import { useAppStore } from '../../store/appStore';
 import { useMemo, useState } from 'react';
 import StoryViewer from '../StoryViewer';
@@ -114,10 +115,10 @@ function censorName(name: string): string {
   return name.slice(0, 3) + '*****';
 }
 
-const API_BASE = 'http://localhost:3001';
+
 function proxyUrl(url: string | null): string | null {
   if (!url) return null;
-  return `${API_BASE}/api/proxy-image?url=${encodeURIComponent(url)}`;
+  return `${API}/api/proxy-image?url=${encodeURIComponent(url)}`;
 }
 
 export default function FeedTab() {

@@ -1,8 +1,9 @@
+import { API_BASE as API } from '../config';
 import { useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { getInitials, getAvatarGradient } from '../data/spanishUsers';
 
-const API_BASE = 'http://localhost:3001';
+
 
 function formatCount(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -12,7 +13,7 @@ function formatCount(n: number): string {
 
 function proxyUrl(url: string | null): string | null {
   if (!url) return null;
-  return `${API_BASE}/api/proxy-image?url=${encodeURIComponent(url)}`;
+  return `${API}/api/proxy-image?url=${encodeURIComponent(url)}`;
 }
 
 export default function ProfileCard() {

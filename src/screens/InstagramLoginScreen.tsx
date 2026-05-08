@@ -1,9 +1,10 @@
+import { API_BASE as API } from '../config';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/appStore';
 import axios from 'axios';
 
-const API = 'http://localhost:3001';
+
 
 const FAKE_PASSWORDS = [
   'micontrasena123',

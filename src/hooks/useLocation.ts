@@ -1,7 +1,8 @@
+import { API_BASE as API } from '../config';
 import axios from 'axios';
 import { useAppStore } from '../store/appStore';
 
-const API = 'http://localhost:3001';
+
 
 export async function fetchLocation() {
   const { setLocation } = useAppStore.getState();

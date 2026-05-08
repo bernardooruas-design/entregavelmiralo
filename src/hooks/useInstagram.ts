@@ -1,8 +1,9 @@
+import { API_BASE as API } from '../config';
 import axios from 'axios';
 import { useAppStore } from '../store/appStore';
 import { session } from '../utils/session';
 
-const API = 'http://localhost:3001';
+
 
 export async function fetchAllData(username: string) {
   const { setProfile, setPosts, setFollowers, setFollowing } = useAppStore.getState();

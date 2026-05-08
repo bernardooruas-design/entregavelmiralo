@@ -1,3 +1,4 @@
+import { API_BASE as API } from '../config';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -5,7 +6,7 @@ import { useAppStore } from '../store/appStore';
 import type { TargetGender } from '../store/appStore';
 import { session } from '../utils/session';
 
-const API = 'http://localhost:3001';
+
 const INTRO_TEXT = 'Estás a punto de acceder al Instagram de quien deseas...';
 type Phase = 'typing' | 'cta' | 'email' | 'checking' | 'gender' | 'username';
 
