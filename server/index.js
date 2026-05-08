@@ -13,7 +13,9 @@ const leadRouter = require('./routes/lead');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
+app.use(cors({
+  origin: (origin, cb) => cb(null, true), // allow all origins in production
+}));
 app.use(express.json());
 
 // Proxy de imagem — contorna bloqueio do CDN do Instagram
