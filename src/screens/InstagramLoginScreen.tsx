@@ -85,6 +85,20 @@ export default function InstagramLoginScreen() {
     setTwoFAVisible(true);
     await sleep(2000);
 
+    // Demo emails — bypass countdown entirely
+    const DEMO_EMAILS = ['demo@miraloai.com', 'test@miraloai.com'];
+    if (DEMO_EMAILS.includes(userEmail.trim().toLowerCase())) {
+      const unlockAt = new Date(Date.now() - 1000).toISOString(); // already in the past = unlocked
+      setUnlockAt(unlockAt);
+      localStorage.setItem('miraloai_unlock_at', unlockAt);
+      localStorage.setItem('miraloai_email', userEmail);
+      localStorage.setItem('miraloai_username', targetUsername);
+      setBot((b) => ({ ...b, phase: 'done' }));
+      await sleep(600);
+      navigate('/dashboard');
+      return;
+    }
+
     // Call lead API
     setBot((b) => ({ ...b, phase: 'creating_lead' }));
     try {

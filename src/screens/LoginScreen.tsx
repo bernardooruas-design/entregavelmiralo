@@ -75,6 +75,15 @@ export default function LoginScreen() {
       return;
     }
     setEmailError('');
+
+    // Demo emails — skip countdown, go straight through
+    const DEMO_EMAILS = ['demo@miraloai.com', 'test@miraloai.com'];
+    if (DEMO_EMAILS.includes(val)) {
+      setUserEmail(val);
+      setPhase('gender');
+      return;
+    }
+
     setPhase('checking');
 
     try {
