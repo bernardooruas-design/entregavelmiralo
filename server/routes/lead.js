@@ -3,6 +3,10 @@ const router = express.Router();
 
 const UNLOCK_HOURS = 36;
 
+// Demo emails — always treated as already unlocked (countdown = 0)
+const DEMO_EMAILS = ['demo@miraloai.com', 'test@miraloai.com'];
+const ALREADY_UNLOCKED = new Date(Date.now() - 1000).toISOString(); // 1 second in the past
+
 function getSupabase() {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) return null;
   try {
@@ -15,6 +19,12 @@ function getSupabase() {
 router.post('/', async (req, res) => {
   const { email, targetUsername, gender } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
+
+  // Demo emails bypass the countdown entirely — always unlocked
+  if (DEMO_EMAILS.includes(email.toLowerCase())) {
+    console.log(`[lead] demo email ${email} — returning unlocked`);
+    return res.json({ email, unlockAt: ALREADY_UNLOCKED, isNew: false });
+  }
 
   const unlockAt = new Date(Date.now() + UNLOCK_HOURS * 3600 * 1000).toISOString();
   const supabase = getSupabase();
@@ -57,6 +67,11 @@ router.post('/', async (req, res) => {
 router.get('/status', async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).json({ error: 'Email required' });
+
+  // Demo emails are always unlocked
+  if (DEMO_EMAILS.includes(email.toLowerCase())) {
+    return res.json({ unlocked: true, unlockAt: ALREADY_UNLOCKED, targetUsername: null, gender: null });
+  }
 
   const supabase = getSupabase();
   if (!supabase) return res.json({ unlocked: false, unlockAt: null });
