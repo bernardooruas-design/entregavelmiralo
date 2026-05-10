@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MiraloAI</title>
+  <script>
+    // SPA redirect: capture full path and redirect to root, which restores the route.
+    var path = window.location.pathname + window.location.search + window.location.hash;
+    sessionStorage.setItem('miraloai_redirect', path);
+    window.location.replace('/');
+  </script>
+</head>
+<body></body>
+</html>
