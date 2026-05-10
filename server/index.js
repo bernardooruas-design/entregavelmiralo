@@ -51,4 +51,9 @@ app.use('/api/lead', leadRouter);
 
 app.get('/health', (_, res) => res.json({ status: 'ok', cache: require('./cache').stats() }));
 
-app.listen(PORT, () => console.log(`MiraloAI backend running on port ${PORT}`));
+// Local dev / Railway: start normally. Vercel serverless: export app.
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`MiraloAI backend running on port ${PORT}`));
+} else {
+  module.exports = app;
+}
