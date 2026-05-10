@@ -1,4 +1,5 @@
 import UpsellCard from '../UpsellCard';
+import { useAppStore } from '../../store/appStore';
 
 const PACKAGES = [
   { label: '1 consulta', price: '0,99€', popular: false },
@@ -6,34 +7,53 @@ const PACKAGES = [
   { label: '15 consultas', price: '7,99€', popular: false },
 ];
 
+/** Seeded integer from a string — same username always gives the same number */
+function seededInt(seed: string, min: number, max: number) {
+  let h = 5381;
+  for (let i = 0; i < seed.length; i++) h = ((h * 33) ^ seed.charCodeAt(i)) >>> 0;
+  return min + (h % (max - min + 1));
+}
+
 export default function ResumenTab() {
+  const { profile, posts } = useAppStore();
+
+  // Real likes from posts API
+  const totalLikes = posts.reduce((sum, p) => sum + (p.like_count || 0), 0);
+
+  // Seeded estimates based on real follower count
+  const base = profile?.follower_count ?? 200;
+  const seed = profile?.username ?? 'default';
+  const gained = seededInt(seed + 'g', Math.max(2, Math.floor(base * 0.012)), Math.max(5, Math.floor(base * 0.04)));
+  const lost   = seededInt(seed + 'l', Math.max(1, Math.floor(base * 0.003)), Math.max(2, Math.floor(base * 0.012)));
+  const spying = seededInt(seed + 's', Math.max(8, Math.floor(base * 0.02)),  Math.max(15, Math.floor(base * 0.06)));
+
   return (
     <div className="flex flex-col gap-4 pb-2">
       {/* Metric grid */}
       <div className="mx-4 grid grid-cols-2 gap-3">
         <MetricCard
-          value="+18"
+          value={`+${gained}`}
           label="Nuevos seguidores"
           sub="últimos 7 días"
           color="text-green"
           trend="up"
         />
         <MetricCard
-          value="-5"
+          value={`-${lost}`}
           label="Dejaron de seguir"
           sub="últimos 7 días"
           color="text-pink"
           trend="down"
         />
         <MetricCard
-          value="134"
+          value={totalLikes > 0 ? totalLikes.toLocaleString() : '—'}
           label="Me gusta recibidos"
-          sub="últimos 7 días"
+          sub="en sus publicaciones"
           color="text-yellow"
           trend="neutral"
         />
         <MetricCard
-          value="23"
+          value={String(spying)}
           label="Cuentas que espía"
           sub=""
           color="text-purple"
