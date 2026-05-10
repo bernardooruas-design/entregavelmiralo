@@ -61,31 +61,64 @@ router.post('/', async (req, res) => {
     return res.json(cached);
   }
 
+  // Minimal empty profile — used as fallback when API fails (no fake data shown)
+  const emptyProfile = {
+    username: clean,
+    full_name: '',
+    biography: '',
+    profile_pic_url: null,
+    follower_count: 0,
+    following_count: 0,
+    media_count: 0,
+    is_private: false,
+  };
+
   if (!process.env.RAPIDAPI_KEY) {
-    return res.json({ ...MOCK_PROFILE, username: clean });
+    return res.json(emptyProfile);
   }
 
-  try {
-    console.log(`[API call] profile:${clean}`);
-    const { data } = await axios.post(
-      `https://${HOST}/api/instagram/userInfo`,
-      { username: clean },
-      {
+  // Helper: try one RapidAPI endpoint and return normalized profile or null
+  async function tryEndpoint(url, body) {
+    try {
+      const { data } = await axios.post(url, body, {
         headers: {
           'Content-Type': 'application/json',
           'x-rapidapi-host': HOST,
           'x-rapidapi-key': process.env.RAPIDAPI_KEY,
         },
         timeout: 15000,
-      }
-    );
+      });
+      const p = normalizeProfile(data, clean);
+      // Only accept if we got meaningful data back
+      if (p.follower_count > 0 || p.profile_pic_url || p.full_name) return { profile: p, raw: data };
+    } catch (e) {
+      console.error(`[profile] ${url} failed:`, e.response?.status, e.message);
+    }
+    return null;
+  }
 
-    const profile = normalizeProfile(data, clean);
+  try {
+    console.log(`[API call] profile:${clean}`);
+
+    // Primary endpoint
+    let result = await tryEndpoint(`https://${HOST}/api/instagram/userInfo`, { username: clean });
+
+    // Fallback endpoint (different path, same host)
+    if (!result) {
+      result = await tryEndpoint(`https://${HOST}/api/instagram/profile`, { username: clean });
+    }
+
+    if (!result) {
+      console.warn(`[profile] all endpoints failed for ${clean}, returning empty`);
+      return res.json(emptyProfile);
+    }
+
+    const { profile, raw } = result;
     cache.set(cacheKey, profile);
 
-    // Cache the numeric user ID for FlashAPI followers/following (saves 1 request)
-    const raw = data?.result?.[0]?.user || data?.user || data?.data?.user || data?.data || data;
-    const pk = raw?.pk || raw?.id || raw?.pk_id;
+    // Cache the numeric user ID for followers/following
+    const rawUser = raw?.result?.[0]?.user || raw?.user || raw?.data?.user || raw?.data || raw;
+    const pk = rawUser?.pk || rawUser?.id || rawUser?.pk_id;
     if (pk) {
       cache.set(`userid:${clean}`, String(pk));
       console.log(`[profile] cached userid ${pk} for ${clean}`);
@@ -93,8 +126,8 @@ router.post('/', async (req, res) => {
 
     res.json(profile);
   } catch (err) {
-    console.error('Profile API error:', err.response?.status, err.response?.data || err.message);
-    res.json({ ...MOCK_PROFILE, username: clean });
+    console.error('Profile API error:', err.message);
+    res.json(emptyProfile);
   }
 });
 
