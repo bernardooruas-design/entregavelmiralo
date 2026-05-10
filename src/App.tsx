@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginScreen from './screens/LoginScreen';
 import LoadingScreen from './screens/LoadingScreen';
 import InstagramLoginScreen from './screens/InstagramLoginScreen';
