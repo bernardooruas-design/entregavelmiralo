@@ -61,10 +61,13 @@ function buildDmUsers(
     return privateNames.map((name, i) => ({ name, profile_pic_url: null, ...previews[i] }));
   }
 
-  // Use following (mutual contacts), fall back to followers, then defaults
-  const source = following.length >= 5 ? following : followers.length >= 5 ? followers : null;
+  // Use following (mutual contacts), fall back to followers, then static defaults
+  const source = following.length > 0 ? following : followers.length > 0 ? followers : null;
   if (source) {
-    return source.slice(0, 5).map((f, i) => ({ name: f.username, profile_pic_url: f.profile_pic_url, ...previews[i] }));
+    // Cycle through real people if fewer than 5
+    const cycled = [...source];
+    while (cycled.length < 5) cycled.push(...source);
+    return cycled.slice(0, 5).map((f, i) => ({ name: f.username, profile_pic_url: f.profile_pic_url, ...previews[i] }));
   }
   return publicNames.map((name, i) => ({ name, profile_pic_url: null, ...previews[i] }));
 }

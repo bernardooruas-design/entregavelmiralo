@@ -6,115 +6,24 @@ import StoryViewer from '../StoryViewer';
 const STORY_LIMIT = 3;
 const POST_LIMIT  = 5;
 
-function avatarUrl(n: number) {
-  return `https://i.pravatar.cc/150?img=${n}`;
-}
-function postUrl(seed: string) {
-  return `https://picsum.photos/seed/${seed}/600/600`;
-}
-
-const STORY_AVATAR_NS = [5, 12, 22, 33, 44, 8, 17, 29, 41, 7];
-
-interface PostDef {
-  avatarN: number;
-  images: string[];
-  caption: string;
-  likes: number;
-  location: string;
-  comments: { avatarN: number; text: string }[];
-  timeAgo: string;
-  isReel?: boolean;
-}
-
-const POST_DEFS: PostDef[] = [
-  {
-    avatarN: 5,
-    images: [postUrl('moda-chica-verano')],
-    caption: '¡Verano eterno! ☀️✨ El mejor plan siempre es este #marbella #verano',
-    likes: 847,
-    location: 'Marbella, Málaga',
-    comments: [
-      { avatarN: 12, text: 'Qué guapaaa!! 😍' },
-      { avatarN: 23, text: '🔥🔥🔥' },
-      { avatarN: 31, text: 'Te ves increíble chica ❤️' },
-    ],
-    timeAgo: '2h',
-  },
-  {
-    avatarN: 17,
-    images: [postUrl('gym-entreno-madrid'), postUrl('pesas-gym-fitness')],
-    caption: 'No hay excusas 💪 Día 45 del reto y sin parar #gym #constancia',
-    likes: 312,
-    location: 'FitBox Madrid',
-    comments: [
-      { avatarN: 8, text: 'Eso es 💪 crack total' },
-      { avatarN: 41, text: '¡Qué máquina tío!' },
-    ],
-    timeAgo: '5h',
-  },
-  {
-    avatarN: 9,
-    images: [postUrl('amigos-playa-espana'), postUrl('playa-puesta-sol'), postUrl('mar-verano-azul')],
-    caption: 'Finde perfecto con la mejor gente ❤️🌅 No lo cambio por nada',
-    likes: 1243,
-    location: 'Playa de la Barceloneta',
-    comments: [
-      { avatarN: 14, text: 'Dios mío los envidiooo!! 😭' },
-      { avatarN: 28, text: 'La próxima me lleváis o rompo algo' },
-      { avatarN: 3,  text: 'Qué bonito todo 🌊' },
-    ],
-    timeAgo: '1d',
-  },
-  {
-    avatarN: 36,
-    images: [postUrl('brunch-restaurante-madrid')],
-    caption: 'Cuando el sábado empieza bien 🥂🍤 Recomendado 100% #brunch #foodie',
-    likes: 589,
-    location: 'Malasaña, Madrid',
-    comments: [
-      { avatarN: 19, text: 'Qué hambre me entró ahora mismo 😩' },
-      { avatarN: 7,  text: '¿Dónde es esto?? Me apunto ya' },
-    ],
-    timeAgo: '1d',
-    isReel: true,
-  },
-  {
-    avatarN: 22,
-    images: [postUrl('noche-madrid-amigos-2024'), postUrl('fiesta-terraceo')],
-    caption: 'Quedadas de las buenas 🥳🎉 Gracias por tanto #finde #madrid',
-    likes: 432,
-    location: 'Malasaña, Madrid',
-    comments: [
-      { avatarN: 45, text: 'Tan guapos todos!! ❤️' },
-      { avatarN: 11, text: '¿Cuándo repetimos?? jajaja' },
-    ],
-    timeAgo: '2d',
-  },
-  {
-    avatarN: 13,
-    images: [postUrl('roma-viaje-2024'), postUrl('coliseo-roma')],
-    caption: '📍 Roma ya en el corazón para siempre 🍕🏛️ #travel #roma #eurotrip',
-    likes: 2187,
-    location: 'Roma, Italia',
-    comments: [
-      { avatarN: 6,  text: 'La mejor ciudad del mundo sin duda!!' },
-      { avatarN: 29, text: 'Me muero de envidia 😭😭' },
-      { avatarN: 52, text: 'Qué pinta todo madre mía 🍕' },
-    ],
-    timeAgo: '3d',
-  },
+const COMMENT_TEXTS = [
+  '😍 Increíble!!', '🔥🔥', 'Te ves genial ❤️', '¡Qué envidia! 😭',
+  '💯 crack', 'Me muero jajaja', '¡¡Qué guapo/a!!', 'La próxima me llevas',
+  '🙌🙌🙌', 'Dios mío sí!!', 'Brutal tío', '❤️❤️❤️',
 ];
 
-const FALLBACK_NAMES = [
-  'carlos_madrid', 'lucia.garcia22', 'pablo.mdz_', 'ana_ruiz',
-  'sergio.f', 'marta_r', 'javi_lo', 'elena.v', 'raul_bcn', 'nuria.lp',
-];
+function relativeTime(takenAt: number): string {
+  const diff = Math.floor((Date.now() / 1000) - takenAt);
+  if (diff < 3600)  return `${Math.max(1, Math.floor(diff / 60))}min`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+  return `${Math.floor(diff / 604800)}sem`;
+}
 
 function censorName(name: string): string {
   if (name.length <= 3) return name + '*****';
   return name.slice(0, 3) + '*****';
 }
-
 
 function proxyUrl(url: string | null): string | null {
   if (!url) return null;
@@ -122,39 +31,36 @@ function proxyUrl(url: string | null): string | null {
 }
 
 export default function FeedTab() {
-  const { followers, following, profile } = useAppStore();
+  const { followers, following, posts, profile } = useAppStore();
   const isPrivate = profile?.is_private ?? false;
   const [openStoryIndex, setOpenStoryIndex] = useState<number | null>(null);
 
-  // Use people they follow as the primary source for feed/story names
-  const feedSource = following.length > 0 ? following : followers.length > 0 ? followers : [];
+  // Real people: prefer following (mutual contacts look more natural in feed)
+  const feedSource = following.length > 0 ? following : followers;
 
-  const usernames: string[] = useMemo(() => {
-    const base: string[] = feedSource.length > 0
-      ? feedSource.map((f) => f.username)
-      : [...FALLBACK_NAMES];
-    while (base.length < POST_DEFS.length + STORY_LIMIT + 4) base.push(...FALLBACK_NAMES);
-    return base;
+  // Cycle through real people to always have enough for posts + stories + comments
+  const cyclicPeople = useMemo(() => {
+    if (feedSource.length === 0) return [];
+    const result = [...feedSource];
+    while (result.length < POST_LIMIT + STORY_LIMIT + 12) result.push(...feedSource);
+    return result;
   }, [feedSource]);
 
-  // Limit: only show STORY_LIMIT stories + locked indicator for the rest
-  const visibleStoryNames = useMemo(() => usernames.slice(0, STORY_LIMIT), [usernames]);
-  const hiddenStoryCount = Math.max(0, usernames.length - STORY_LIMIT);
+  // Stories: first STORY_LIMIT people from following/followers
+  const visibleStoryPeople = cyclicPeople.slice(0, STORY_LIMIT);
+  const hiddenStoryCount = Math.max(0, feedSource.length - STORY_LIMIT);
 
-  // Limit: only show POST_LIMIT posts
-  const visiblePosts = POST_DEFS.slice(0, POST_LIMIT);
+  // Feed posts: use real posts from API (thumbnail + real likes/caption)
+  // Each post is attributed to a real following/follower person
+  const visiblePosts = useMemo(() => posts.slice(0, POST_LIMIT), [posts]);
 
   const profilePicProxied = proxyUrl(profile?.profile_pic_url ?? null);
 
-  // Build stories array for StoryViewer
-  const stories = useMemo(() => visibleStoryNames.map((name, i) => {
-    const src = feedSource[i];
-    const rawPic = src?.profile_pic_url ?? null;
-    return {
-      username: name,
-      avatarUrl: proxyUrl(rawPic) ?? `https://i.pravatar.cc/150?u=${name}`,
-    };
-  }), [visibleStoryNames, feedSource]);
+  // Build stories array for StoryViewer — real people only
+  const stories = useMemo(() => visibleStoryPeople.map((person) => ({
+    username: isPrivate ? censorName(person.username) : person.username,
+    avatarUrl: proxyUrl(person.profile_pic_url) ?? `https://i.pravatar.cc/150?u=${person.username}`,
+  })), [visibleStoryPeople, isPrivate]);
 
   return (
     <div className="flex flex-col" style={{ background: '#000', minHeight: '100%' }}>
@@ -198,13 +104,13 @@ export default function FeedTab() {
           </span>
         </div>
 
-        {/* Visible stories (limited to STORY_LIMIT) */}
-        {visibleStoryNames.map((name, i) => {
-          const rawPic = feedSource[i]?.profile_pic_url ?? null;
-          const storyAvatarSrc = proxyUrl(rawPic) ?? avatarUrl(STORY_AVATAR_NS[i] || (i + 1));
+        {/* Visible stories — real following/follower people */}
+        {visibleStoryPeople.map((person, i) => {
+          const storyAvatarSrc = proxyUrl(person.profile_pic_url) ?? `https://i.pravatar.cc/150?u=${person.username}`;
+          const displayName = isPrivate ? censorName(person.username) : person.username;
           return (
             <button
-              key={name + i}
+              key={person.username + i}
               className="flex flex-col items-center gap-1 flex-shrink-0"
               style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
               onClick={() => setOpenStoryIndex(i)}
@@ -216,12 +122,12 @@ export default function FeedTab() {
                     src={storyAvatarSrc}
                     alt=""
                     className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = avatarUrl(STORY_AVATAR_NS[i] || (i + 1)); }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = `https://i.pravatar.cc/150?u=${person.username}`; }}
                   />
                 </div>
               </div>
               <span className="text-[10px] text-center" style={{ color: '#f5f5f5', fontFamily: 'system-ui', maxWidth: 64, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {isPrivate ? censorName(name) : name}
+                {displayName}
               </span>
             </button>
           );
@@ -247,24 +153,33 @@ export default function FeedTab() {
         )}
       </div>
 
-      {/* Posts (limited to POST_LIMIT) */}
-      {visiblePosts.map((def, i) => {
-        const postUser = feedSource[i];
-        const rawPic = postUser?.profile_pic_url ?? null;
-        const avatarSrc = proxyUrl(rawPic) ?? avatarUrl(def.avatarN);
+      {/* Posts — real thumbnails from API, attributed to real following/followers */}
+      {visiblePosts.map((post, i) => {
+        const person = cyclicPeople[i];
+        if (!person) return null;
+        const avatarSrc = proxyUrl(person.profile_pic_url) ?? `https://i.pravatar.cc/150?u=${person.username}`;
+        const displayName = isPrivate ? censorName(person.username) : person.username;
+        // 2-3 commenters from real people
+        const commentPeople = [
+          cyclicPeople[(i + 1) % Math.max(1, cyclicPeople.length)],
+          cyclicPeople[(i + 2) % Math.max(1, cyclicPeople.length)],
+          cyclicPeople[(i + 3) % Math.max(1, cyclicPeople.length)],
+        ].filter(Boolean);
         return (
           <PostCard
-            key={def.avatarN + i}
-            def={def}
+            key={post.id}
+            postImageUrl={proxyUrl(post.thumbnail)}
+            caption={post.caption}
+            likes={post.like_count}
+            commentCount={post.comment_count}
+            timeAgo={relativeTime(post.taken_at)}
             avatarSrc={avatarSrc}
-            username={isPrivate
-              ? censorName(usernames[i] || FALLBACK_NAMES[i % FALLBACK_NAMES.length])
-              : (usernames[i] || FALLBACK_NAMES[i % FALLBACK_NAMES.length])}
-            commentUsernames={def.comments.map((_, ci) => {
-              const raw = usernames[(i + ci + 1) % usernames.length] || FALLBACK_NAMES[(i + ci + 1) % FALLBACK_NAMES.length];
-              return isPrivate ? censorName(raw) : raw;
-            })}
-            isPrivate={isPrivate}
+            username={displayName}
+            commenters={commentPeople.slice(0, 2).map((p, ci) => ({
+              avatarSrc: proxyUrl(p?.profile_pic_url) ?? `https://i.pravatar.cc/150?u=${p?.username}`,
+              username: isPrivate ? censorName(p?.username ?? '') : (p?.username ?? ''),
+              text: COMMENT_TEXTS[(i * 3 + ci) % COMMENT_TEXTS.length],
+            }))}
           />
         );
       })}
@@ -300,17 +215,19 @@ export default function FeedTab() {
   );
 }
 
-function PostCard({ def, avatarSrc, username, commentUsernames }: {
-  def: PostDef;
+function PostCard({ postImageUrl, caption, likes, commentCount, timeAgo, avatarSrc, username, commenters }: {
+  postImageUrl: string | null;
+  caption: string;
+  likes: number;
+  commentCount: number;
+  timeAgo: string;
   avatarSrc: string;
   username: string;
-  commentUsernames: string[];
-  isPrivate: boolean;
+  commenters: { avatarSrc: string; username: string; text: string }[];
 }) {
-  const [imgIndex, setImgIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const multi = def.images.length > 1;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div className="flex flex-col border-b" style={{ borderColor: '#1a1a1a' }}>
@@ -320,28 +237,11 @@ function PostCard({ def, avatarSrc, username, commentUsernames }: {
           <div className="w-9 h-9 rounded-full p-[1.5px]"
             style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
             <div className="w-full h-full rounded-full overflow-hidden border-2" style={{ borderColor: '#000' }}>
-              <img
-                src={avatarSrc}
-                alt=""
-                className="w-full h-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = avatarUrl(def.avatarN); }}
-              />
+              <img src={avatarSrc} alt="" className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).src = `https://i.pravatar.cc/150?u=${username}`; }} />
             </div>
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-semibold" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>{username}</span>
-              {def.isReel && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: '#1a1a1a', color: '#8e8e8e', fontFamily: 'system-ui' }}>Reel</span>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                <path d="M4.5 1C2.567 1 1 2.567 1 4.5c0 .94.365 1.797.96 2.44L4.5 8.5l2.54-1.56A3.49 3.49 0 0 0 8 4.5C8 2.567 6.433 1 4.5 1z" fill="#ed4956" opacity="0.7"/>
-              </svg>
-              <span className="text-[10px]" style={{ color: '#8e8e8e', fontFamily: 'system-ui' }}>{def.location}</span>
-            </div>
-          </div>
+          <span className="text-sm font-semibold" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>{username}</span>
         </div>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <circle cx="9" cy="4" r="1.3" fill="#8e8e8e"/>
@@ -350,53 +250,19 @@ function PostCard({ def, avatarSrc, username, commentUsernames }: {
         </svg>
       </div>
 
-      {/* Image / Carousel */}
-      <div className="relative w-full aspect-square overflow-hidden">
-        <img src={def.images[imgIndex]} alt="" className="w-full h-full object-cover" />
-
-        {def.isReel && (
-          <div className="absolute top-2.5 right-3 flex items-center gap-1.5 px-2 py-1 rounded-lg"
-            style={{ background: 'rgba(0,0,0,0.55)' }}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="white">
-              <rect x="1" y="1" width="9" height="9" rx="1" stroke="white" strokeWidth="1.2"/>
-              <path d="M2 3.5h7M2 7h7M5 1v9" stroke="white" strokeWidth="0.8"/>
+      {/* Real post image */}
+      <div className="relative w-full aspect-square overflow-hidden bg-[#111]">
+        {postImageUrl && !imgError ? (
+          <img src={postImageUrl} alt="" className="w-full h-full object-cover"
+            onError={() => setImgError(true)} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <rect x="4" y="4" width="32" height="32" rx="4" stroke="#363636" strokeWidth="1.5"/>
+              <circle cx="14" cy="15" r="3" stroke="#363636" strokeWidth="1.5"/>
+              <path d="M4 28l8-7 6 6 5-5 9 8" stroke="#363636" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="text-[10px] font-semibold" style={{ color: 'white', fontFamily: 'system-ui' }}>Reel</span>
           </div>
-        )}
-
-        {multi && (
-          <>
-            {imgIndex > 0 && (
-              <button onClick={() => setImgIndex((n) => n - 1)}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(0,0,0,0.5)' }}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M7.5 2L3.5 6l4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
-            {imgIndex < def.images.length - 1 && (
-              <button onClick={() => setImgIndex((n) => n + 1)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(0,0,0,0.5)' }}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M4.5 2L8.5 6l-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1">
-              {def.images.map((_, di) => (
-                <div key={di} className="rounded-full transition-all"
-                  style={{ width: di === imgIndex ? 6 : 5, height: di === imgIndex ? 6 : 5, background: di === imgIndex ? '#0095f6' : 'rgba(255,255,255,0.5)' }} />
-              ))}
-            </div>
-            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.55)' }}>
-              <span className="text-xs font-semibold" style={{ color: 'white', fontFamily: 'system-ui' }}>
-                {imgIndex + 1}/{def.images.length}
-              </span>
-            </div>
-          </>
         )}
       </div>
 
@@ -425,31 +291,34 @@ function PostCard({ def, avatarSrc, username, commentUsernames }: {
         </div>
 
         <span className="text-sm font-semibold" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>
-          {(def.likes + (liked ? 1 : 0)).toLocaleString()} Me gusta
+          {(likes + (liked ? 1 : 0)).toLocaleString()} Me gusta
         </span>
 
-        <div>
-          <span className="text-sm font-semibold" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>{username} </span>
-          <span className="text-sm" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>{def.caption}</span>
-        </div>
+        {caption && (
+          <div>
+            <span className="text-sm font-semibold" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>{username} </span>
+            <span className="text-sm" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>
+              {caption.length > 120 ? caption.slice(0, 120) + '…' : caption}
+            </span>
+          </div>
+        )}
 
-        {!showComments && def.comments.length > 0 && (
-          <button onClick={() => setShowComments(true)}>
-            <span className="text-sm" style={{ color: '#8e8e8e', fontFamily: 'system-ui', textAlign: 'left', display: 'block' }}>
-              Ver los {def.comments.length} comentarios
+        {!showComments && commentCount > 0 && (
+          <button onClick={() => setShowComments(true)} className="text-left">
+            <span className="text-sm" style={{ color: '#8e8e8e', fontFamily: 'system-ui' }}>
+              Ver los {commentCount.toLocaleString()} comentarios
             </span>
           </button>
         )}
 
-        {showComments && (
+        {showComments && commenters.length > 0 && (
           <div className="flex flex-col gap-1.5">
-            {def.comments.map((c, ci) => (
+            {commenters.map((c, ci) => (
               <div key={ci} className="flex items-center gap-2">
-                <img src={avatarUrl(c.avatarN)} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                <img src={c.avatarSrc} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).src = `https://i.pravatar.cc/150?u=${c.username}`; }} />
                 <div>
-                  <span className="text-xs font-semibold" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>
-                    {commentUsernames[ci] || 'usuario'}{' '}
-                  </span>
+                  <span className="text-xs font-semibold" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>{c.username} </span>
                   <span className="text-xs" style={{ color: '#f5f5f5', fontFamily: 'system-ui' }}>{c.text}</span>
                 </div>
               </div>
@@ -457,7 +326,7 @@ function PostCard({ def, avatarSrc, username, commentUsernames }: {
           </div>
         )}
 
-        <span className="text-xs" style={{ color: '#8e8e8e', fontFamily: 'system-ui' }}>Hace {def.timeAgo}</span>
+        <span className="text-xs" style={{ color: '#8e8e8e', fontFamily: 'system-ui' }}>Hace {timeAgo}</span>
       </div>
     </div>
   );
