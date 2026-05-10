@@ -26,7 +26,7 @@ app.get('/api/proxy-image', async (req, res) => {
 
   try {
     const response = await axios.get(decodeURIComponent(url), {
-      responseType: 'stream',
+      responseType: 'arraybuffer', // stream não funciona em serverless (Vercel)
       timeout: 8000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
@@ -36,7 +36,7 @@ app.get('/api/proxy-image', async (req, res) => {
     });
     res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
     res.setHeader('Cache-Control', 'public, max-age=86400');
-    response.data.pipe(res);
+    res.send(Buffer.from(response.data));
   } catch (err) {
     res.status(502).send('Image unavailable');
   }
