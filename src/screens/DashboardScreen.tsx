@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/appStore';
 import { session } from '../utils/session';
@@ -10,16 +10,25 @@ import BottomNav from '../components/BottomNav';
 export default function DashboardScreen() {
   const { targetUsername } = useAppStore();
   const navigate = useNavigate();
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!targetUsername) {
+    // Always try to restore from localStorage first (handles F5 / direct URL)
+    if (!useAppStore.getState().targetUsername) {
       if (session.has()) {
         session.restoreStore();
+        setReady(true);
       } else {
         navigate('/');
+        return;
       }
+    } else {
+      setReady(true);
     }
-  }, [targetUsername, navigate]);
+  }, []); // run once on mount, not on every targetUsername change
+
+  // Don't render until session is restored to avoid flash
+  if (!ready) return null;
 
   return (
     <div className="min-h-screen bg-bg flex justify-center">
