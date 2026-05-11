@@ -236,7 +236,7 @@ export default function LoginScreen() {
                   type="text"
                   placeholder="carlos_madrid"
                   value={username}
-                  onChange={(e) => { setUsername(e.target.value); setUsernameError(''); }}
+                  onChange={(e) => { setUsername(e.target.value.replace('@', '')); setUsernameError(''); }}
                   style={{ background: 'transparent', border: 'none', outline: 'none', color: '#f5f5f5', fontSize: 15, padding: '14px 14px 14px 6px', width: '100%', fontFamily: 'system-ui' }}
                 />
               </div>
